@@ -116,6 +116,7 @@ func checkbarf(e error, s string) {
 // NewXmlAppConfiguration processes CLI arguments for any XML-related command.
 func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfiguration, error) {
 	var pXAC *XmlAppConfiguration
+	pXAC = new(XmlAppConfiguration)
 	initVars(pXAC)
 	DisableFlags("hDgpr")
 	// Do not use logging until the invocation is sorted out.
@@ -305,7 +306,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 
 	// IF user asked for a single catalog file
 	if gotC && !gotS {
-		pXAC.XmlCatalogFile, e = XM.NewXmlCatalogFile_noGT(xmlCatArg)
+		pXAC.XmlCatalogFile, e = XM.NewXmlCatalogFile(xmlCatArg)
 		if e != nil {
 			println("==> ERROR: Can't find or process catalog file:", xmlCatArg)
 			println("    Error was:", e.Error())
@@ -341,7 +342,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 		// For every catalog file (usually just one)
 		for _, filePathToUse = range fileNameList {
 			var xmlCat *XM.XmlCatalogFile
-			xmlCat, e = XM.NewXmlCatalogFile_noGT(filePathToUse.S())
+			xmlCat, e = XM.NewXmlCatalogFile(filePathToUse.S())
 			if e != nil {
 				println("==> ERROR: Can't find or process catalog file:", filePathToUse)
 				println("    Error was:", e.Error())
