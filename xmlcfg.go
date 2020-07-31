@@ -26,7 +26,7 @@ var inArg, outArg, dbArg, xmlCatArg, xmlSchemasArg string
 type XmlAppConfiguration struct {
 	AppName                                           string
 	DBhandle                                          *db.MmmcDB
-	Infile, Outfile, Dbdir, Xmlcatfile, Xmlschemasdir FU.PathInfo // NOT ptr! Barfs at startup.
+	Infile, Outfile, Dbdir, Xmlcatfile, Xmlschemasdir FU.PathProps // NOT ptr! Barfs at startup.
 	RestPort                                          int
 	// CLI flags
 	FollowSymLinks, Pritt, DBdoImport, Help, Debug, GroupGenerated, Validate, DBdoZeroOut bool
@@ -179,7 +179,7 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 		checkbarf(e, "Cannot read from Stdin")
 		e = ioutil.WriteFile("Stdin.xml", []byte(stdIn), 0666)
 		checkbarf(e, "Cannot write to ./Stdin.xml")
-		pXAC.Infile = *FU.NewPathInfo("Stdin.xml") // .RelFilePath = "Stdin.xml"
+		pXAC.Infile = *FU.NewPathProps("Stdin.xml") // .RelFilePath = "Stdin.xml"
 
 	} else {
 		// ===========================================
@@ -187,7 +187,7 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 		//   info about path, existence, and type
 		// ===========================================
 		// Process input-file(s) argument, which can be a relative filepath.
-		pXAC.Infile = *FU.NewPathInfo(flag.Args()[0])
+		pXAC.Infile = *FU.NewPathProps(flag.Args()[0])
 		// If the absolute path does not match the argument provided, inform the user.
 		if pXAC.Infile.AbsFP() != flag.Args()[0] { // CA.In.RelFilePath { // CA.In.ArgFilePath {
 			println("==> Input:", FU.Enhomed(pXAC.Infile.AbsFP()))
@@ -210,7 +210,7 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 
 	// Process output-file(s) argument, which can be a relative filepath.
 	// CA.Out.ProcessFilePathArg(CA.Out.ArgFilePath)
-	pXAC.Outfile = *FU.NewPathInfo(outArg) // CA.Out.RelFilePath)
+	pXAC.Outfile = *FU.NewPathProps(outArg) // CA.Out.RelFilePath)
 
 	// Process database directory argument, which can be a relative filepath.
 	// CA.DB.ProcessFilePathArg(CA.DBdirPath)
@@ -235,12 +235,12 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	if e != nil {
 		return fmt.Errorf("DB setup failure: %w", e)
 	}
-	theDBexists = pXAC.DBhandle.PathInfo.Exists()
+	theDBexists = pXAC.DBhandle.PathProps.Exists()
 	var s = "exists"
 	if !theDBexists {
 		s = "does not exist"
 	}
-	fmt.Printf("==> DB %s: %s\n", s, pXAC.DBhandle.PathInfo.AbsFP())
+	fmt.Printf("==> DB %s: %s\n", s, pXAC.DBhandle.PathProps.AbsFP())
 
 	if pXAC.DBdoZeroOut {
 		println("    --> Zeroing out DB")
@@ -266,7 +266,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 	}
 	if gotC { // -c
 		// pCA.XmlCat.ProcessFilePathArg(CA.XmlCat.ArgFilePath)
-		pXAC.Xmlcatfile = *FU.NewPathInfo(xmlCatArg)
+		pXAC.Xmlcatfile = *FU.NewPathProps(xmlCatArg)
 		if !(pXAC.Xmlcatfile.IsOkayFile() && pXAC.Xmlcatfile.Size() > 0) {
 			println("==> ERROR: XML catalog filepath is not file: " + pXAC.Xmlcatfile.AbsFP())
 			return errors.New(fmt.Sprintf("mcfile.ConfArgs.ProcCatalArgs<%s:%s>",
@@ -278,7 +278,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 		}
 	}
 	if gotS { // -s
-		pXAC.Xmlschemasdir = *FU.NewPathInfo(xmlSchemasArg)
+		pXAC.Xmlschemasdir = *FU.NewPathProps(xmlSchemasArg)
 		if !pXAC.Xmlschemasdir.IsOkayDir() {
 			return errors.New("mcfile.ConfArgs.ProcCatalArgs: cannot open XML catalog directory: " +
 				pXAC.Xmlschemasdir.AbsFP())
@@ -287,7 +287,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 	var e error
 	if gotS { // -s and not -c
 		println("==> Schema(s):", xmlSchemasArg)
-		pXAC.Xmlschemasdir = *FU.NewPathInfo(xmlSchemasArg)
+		pXAC.Xmlschemasdir = *FU.NewPathProps(xmlSchemasArg)
 		if pXAC.Xmlschemasdir.AbsFP() != xmlSchemasArg {
 			println("     --> i.e. ", FU.Enhomed(pXAC.Xmlschemasdir.AbsFP()))
 		}
