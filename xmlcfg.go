@@ -82,23 +82,20 @@ var UMM = map[string]string{
 
 func initVars(pXAC *XmlAppConfiguration) {
 	// f.StringVarP(&inArg, "infile", "i", "", UMM["i"])
+	flag.StringVarP(&dbArg, "db-dir", "d", "", UMM["d"])
 	flag.StringVarP(&outArg, "outfile", "o", "", UMM["o"])
 	flag.StringVarP(&xmlCatArg, "catalog", "c", "", UMM["c"])
-	flag.StringVarP(&dbArg, "db-dir", "d", "", UMM["d"])
 	flag.StringVarP(&xmlSchemasArg, "search", "s", "", UMM["s"])
-	flag.BoolVarP(&pXAC.DBdoImport, "import", "m", false, UMM["m"])
-	flag.BoolVarP(&pXAC.FollowSymLinks, "symlinks", "L", true, UMM["L"])
-	flag.BoolVarP(&pXAC.GroupGenerated, "group-gen", "g", false, UMM["g"])
+	flag.BoolVarP(&pXAC.Help, "help", "h", false, UMM["h"])
 	flag.BoolVarP(&pXAC.Pritt, "pretty", "p", true, UMM["p"])
 	flag.BoolVarP(&pXAC.Debug, "debug", "D", false, UMM["D"])
-	flag.BoolVarP(&pXAC.Help, "help", "h", false, UMM["h"])
 	flag.BoolVarP(&pXAC.Validate, "validate", "v", false, UMM["v"])
+	flag.BoolVarP(&pXAC.DBdoImport, "import", "m", false, UMM["m"])
 	flag.BoolVarP(&pXAC.DBdoZeroOut, "zero-out", "z", false, UMM["z"])
+	flag.BoolVarP(&pXAC.FollowSymLinks, "symlinks", "L", true, UMM["L"])
+	flag.BoolVarP(&pXAC.GroupGenerated, "group-gen", "g", false, UMM["g"])
 	flag.IntVarP(&pXAC.RestPort, "rest-port", "r", 0, UMM["r"])
 	EnableAllFlags()
-	// fmt.Printf("FLAGS %+v \n", flag.CommandLine)
-	// func (f *FlagSet) VisitAll(fn func(*Flag))
-	// flag.CommandLine.VisitAll(myFlagFunc)
 }
 
 // checkbarf simply aborts with an error message, if a
@@ -124,12 +121,13 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 	pXAC.AppName = appName
 	var e error
 
+	// If called from the CLI
 	if !WU.IsWasm() {
-		// == Figure out what CLI name we were called as ==
+		// Figure out what CLI name we were called as
 		osex, _ := os.Executable()
 		// The call to FP.Clean(..) is needed (!!)
 		println("==> Running:", FU.Enhomed(FP.Clean(osex)))
-		// == Locate xmllint for doing XML validations ==
+		// Locate xmllint for doing XML validations
 		xl, e := exec.LookPath("xmllint")
 		if e != nil {
 			xl = "not found"
@@ -139,9 +137,9 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 		}
 		println("==> xmllint:", xl)
 	}
-	// == Examine CLI invocation flags ==
+	// Examine CLI invocation flags
 	flag.Parse()
-	fmt.Printf("CMD-TAIL: %+v \n", flag.Args())
+	fmt.Printf("D=> Command tail: %+v \n", flag.Args())
 	// FIXME - pos'l arg OR "-i" OR stdin OR "-"
 	if len(osArgs) < 2 || nil == flag.Args() || 0 == len(flag.Args()) {
 		println("==> Argument parsing failed. Did not specify input file(s)?")
@@ -150,8 +148,8 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 	}
 	if pXAC.Debug {
 		fmt.Printf("D=> Flags: debug:%s grpGen:%s help:%s "+
-			"import:%s printty:%s validate:%s zeroOutDB:%s restPort:%d \n",
-			SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated), // d g h m p v z r
+			"import:%s pritty:%s validate:%s zeroOutDB:%s restPort:%d \n",
+			SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated),
 			SU.Yn(pXAC.Help), SU.Yn(pXAC.DBdoImport), SU.Yn(pXAC.Pritt),
 			SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut), pXAC.RestPort)
 		fmt.Println("D=> CLI tail:", flag.Args())
