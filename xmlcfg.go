@@ -32,12 +32,12 @@ type XmlAppConfiguration struct {
 	RestPort int
 	// CLI flags
 	FollowSymLinks, Pritt, DBdoImport, Help, Debug,
-	GroupGenerated, GTokens, Validate, DBdoZeroOut bool
+	GroupGenerated, GTokens, GTree, Validate, DBdoZeroOut bool
 	// Result of processing CLI arg for input file(s)
 	SingleFile bool
 	// Result of processing CLI args (-c, -s)
 	*XM.XmlCatalogFile
-	PrittOutput, GTokenOutput io.Writer
+	PrittOutput, GTokensOutput, GTreeOutput io.Writer
 }
 
 var myAppName string
@@ -72,7 +72,8 @@ var UMM = map[string]string{
 		"(e.g. ./Filnam.xml maps to ./Filenam.xml_gxml/Filenam.*)",
 	"m": "Import input file(s) to database",
 	"p": "Pretty-print to file with \"fmtd-\" prepended to file extension",
-	"t": "gTokens written to file with \"gtkns-\" prepended to file extension",
+	"t": "gTree written to file with \"gtr-\" prepended to file extension",
+	"k": "gTokens written to file with \"gtk-\" prepended to file extension",
 	"v": "Validate input file(s) (using xmllint) (with flag \"-c\" or \"-s\")",
 	"z": "Zero out the database",
 	"D": "Turn on debugging",
@@ -92,9 +93,10 @@ func initVars(pXAC *XmlAppConfiguration) {
 	flag.StringVarP(&xmlCatArg, "catalog", "c", "", UMM["c"])
 	flag.StringVarP(&xmlSchemasArg, "search", "s", "", UMM["s"])
 	flag.BoolVarP(&pXAC.Help, "help", "h", false, UMM["h"])
-	flag.BoolVarP(&pXAC.Pritt, "pretty", "p", true, UMM["p"])
+	flag.BoolVarP(&pXAC.GTree, "gtree", "t", false, UMM["t"])
 	flag.BoolVarP(&pXAC.Debug, "debug", "D", false, UMM["D"])
-	flag.BoolVarP(&pXAC.GTokens, "tokens", "t", false, UMM["t"])
+	flag.BoolVarP(&pXAC.Pritt, "pretty", "p", false, UMM["p"])
+	flag.BoolVarP(&pXAC.GTokens, "gtokens", "k", false, UMM["k"])
 	flag.BoolVarP(&pXAC.Validate, "validate", "v", false, UMM["v"])
 	flag.BoolVarP(&pXAC.DBdoImport, "import", "m", false, UMM["m"])
 	flag.BoolVarP(&pXAC.DBdoZeroOut, "zero-out", "z", false, UMM["z"])
@@ -154,10 +156,11 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 	}
 	if pXAC.Debug {
 		fmt.Printf("D=> Flags: debug:%s grpGen:%s help:%s "+
-			"import:%s pritty:%s gtkns:%s validate:%s zeroOutDB:%s restPort:%d \n",
+			"import:%s pritty:%s gtokens:%s gtree:%s validate:%s zeroOutDB:%s restPort:%d \n",
 			SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated), SU.Yn(pXAC.Help),
 			SU.Yn(pXAC.DBdoImport), SU.Yn(pXAC.Pritt), SU.Yn(pXAC.GTokens),
-			SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut), pXAC.RestPort)
+			SU.Yn(pXAC.GTree), SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut),
+			pXAC.RestPort)
 		fmt.Println("D=> CLI tail:", flag.Args())
 	}
 
