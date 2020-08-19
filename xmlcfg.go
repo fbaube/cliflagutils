@@ -37,7 +37,7 @@ type XmlAppConfiguration struct {
 	SingleFile bool
 	// Result of processing CLI args (-c, -s)
 	*XM.XmlCatalogFile
-	PrittOutput, GTokensOutput, GTreeOutput io.Writer
+	PrittOutput io.Writer
 }
 
 var myAppName string
