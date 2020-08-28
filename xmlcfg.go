@@ -134,7 +134,7 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 		// Figure out what CLI name we were called as
 		osex, _ := os.Executable()
 		// The call to FP.Clean(..) is needed (!!)
-		println("==> Running:", FU.Enhomed(FP.Clean(osex)))
+		println("==> Running:", FU.Tildotted(FP.Clean(osex)))
 		// Locate xmllint for doing XML validations
 		xl, e := exec.LookPath("xmllint")
 		if e != nil {
@@ -197,7 +197,7 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 		pXAC.Infile = *FU.NewPathProps(flag.Args()[0])
 		// If the absolute path does not match the argument provided, inform the user.
 		if pXAC.Infile.AbsFP() != flag.Args()[0] { // CA.In.RelFilePath { // CA.In.ArgFilePath {
-			println("==> Input:", FU.Enhomed(pXAC.Infile.AbsFP()))
+			println("==> Infilespec:", FU.Tildotted(pXAC.Infile.AbsFP()))
 		}
 		if pXAC.Infile.IsOkayDir() {
 			println("    --> The input is a directory and will be processed recursively.")
