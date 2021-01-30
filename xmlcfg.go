@@ -4,7 +4,6 @@ import (
 	// "flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	FP "path/filepath"
@@ -181,10 +180,10 @@ func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfigurati
 				println("==> Reading Stdin from a file or pipe")
 			}
 		}
-		// bb, e := ioutil.ReadAll(os.Stdin)
+		// bb, e := ReadAll(os.Stdin)
 		stdIn := FU.GetStringFromStdin()
 		checkbarf(e, "Cannot read from Stdin")
-		e = ioutil.WriteFile("Stdin.xml", []byte(stdIn), 0666)
+		e = os.WriteFile("Stdin.xml", []byte(stdIn), 0666)
 		checkbarf(e, "Cannot write to ./Stdin.xml")
 		pXAC.Infile = *FU.NewPathProps("Stdin.xml") // .RelFilePath = "Stdin.xml"
 
