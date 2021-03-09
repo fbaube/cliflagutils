@@ -244,7 +244,7 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 			if (stat.Mode() & os.ModeCharDevice) != 0 {
 				println("==> Reading from Stdin; press ^D right after a newline to end")
 			} else {
-				println("==> Reading Stdin from a file or pipe")
+				L.L.Info("Reading Stdin from a file or pipe")
 			}
 		}
 		// bb, e := ReadAll(os.Stdin)
@@ -263,16 +263,16 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 		pXAC.Infile = *FU.NewPathProps(flag.Args()[0])
 		// If the absolute path does not match the argument provided, inform the user.
 		if pXAC.Infile.AbsFP() != flag.Args()[0] { // CA.In.RelFilePath { // CA.In.ArgFilePath {
-			println("==> Infilespec:", FU.Tildotted(pXAC.Infile.AbsFP()))
+			L.L.Info("Infilespec: " + FU.Tildotted(pXAC.Infile.AbsFP()))
 		}
 		if pXAC.Infile.IsOkayDir() {
-			println("    --> The input is a directory and will be processed recursively.")
+			L.L.Info("The input is a directory and will be processed recursively.")
 		} else if pXAC.Infile.IsOkayFile() {
-			println("    --> The input is a single file: extra info will be listed here.")
+			L.L.Info("The input is a single file: extra info will be listed here.")
 			pXAC.SingleFile = true
 		} else {
-			println("    --> The input is a type not understood.")
-			return nil, fmt.Errorf("Bad type for input: " + pXAC.Infile.AbsFP())
+			L.L.Error("The input is a type not understood.")
+			return nil, errors.New("Bad type for input: " + pXAC.Infile.AbsFP())
 		}
 	}
 
