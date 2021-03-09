@@ -55,9 +55,11 @@ type XmlAppConfiguration struct {
 
 var myAppName string
 
+/*
 func SetAppName(s string) {
 	myAppName = s
 }
+*/
 
 var multipleXmlCatalogFiles []*XM.XmlCatalogFile
 
@@ -139,8 +141,9 @@ func CheckMustUsage() error {
 	// Figure out what CLI name we were called as
 	myAppName, _ := os.Executable()
 	// The call to FP.Clean(..) is needed (!!)
-	L.L.Dbg("Executing: " + FU.Tildotted(FP.Clean(myAppName)))
+	// L.L.Dbg("Executing: " + FU.Tildotted(FP.Clean(myAppName)))
 	myAppName = FP.Base(myAppName)
+	pXAC.AppName = myAppName
 	// Process CLI invocation flags
 	flag.Parse()
 	L.L.Dbg("Command tail: %+v", flag.Args())
@@ -154,6 +157,8 @@ func CheckMustUsage() error {
 	if !gotNoArgs {
 		err = errors.New("ERROR: Argument parsing failed. Did not specify input file(s)?")
 		println(myAppName+":", err.Error())
+	} else {
+		err = errors.New("Nothing to do")
 	}
 	MyUsage()
 	return err
@@ -169,7 +174,20 @@ func checkbarf(e error, s string) {
 	// fmt.Fprintf(os.Stderr, "%s failed: %s \n", myAppName, e)
 	// MU.ErrorTrace(os.Stderr, e)
 	L.L.Panic("%s failed: %s", myAppName, e)
+	L.L.Close()
 	os.Exit(1)
+}
+
+// pXAC is a global predefined default XmlAppConfiguration.
+var pXAC *XmlAppConfiguration
+
+func init() {
+	pXAC = new(XmlAppConfiguration)
+	initVars(pXAC)
+}
+
+func GetXmlAppConfiguration() *XmlAppConfiguration {
+	return pXAC
 }
 
 // NewXmlAppConfiguration processes CLI arguments for any XML-related command.
@@ -183,11 +201,6 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 			return nil, e
 		}
 	}
-	var pXAC *XmlAppConfiguration
-	pXAC = new(XmlAppConfiguration)
-	initVars(pXAC)
-	DisableFlags("hDgpr")
-	pXAC.AppName = myAppName
 	var e error
 
 	// If called from the CLI
@@ -201,12 +214,10 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 		}
 		L.L.Info("xmllint found at: " + xl)
 	}
-	// Examine CLI invocation flags
-	flag.Parse()
-	L.L.Dbg("Command tail: %+v \n", flag.Args())
-	// FIXME - pos'l arg OR "-i" OR stdin OR "-"
+	// Assert re. CLI invocation flags
 	if len(osArgs) < 2 {
 		L.L.Panic("CLI argument processing")
+		L.L.Close()
 		os.Exit(1)
 	}
 	if pXAC.Debug {
@@ -226,7 +237,7 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 	// Handle case where XML comes from standard input i.e. os.Stdin
 	if flag.Args()[0] == "-" {
 		if WU.IsWasm() {
-			println("==> FIXME Trying to read from Stdin; press ^D right after a newline to end")
+			println("==> FIXME/wasm: Trying to read from Stdin; press ^D right after a newline to end")
 		} else {
 			stat, e := os.Stdin.Stat()
 			checkbarf(e, "Cannot Stat() Stdin")
