@@ -3,8 +3,6 @@ package cliflagutils
 import (
 	"context"
 
-	MU "github.com/fbaube/miscutils"
-
 	"github.com/jmoiron/sqlx"
 )
 
@@ -30,7 +28,7 @@ type GCtx struct {
 	// OwnLogPfx is own log prefix (should include a blank if needed)
 	OwnLogPfx string
 	// OwnLog is own logger
-	OwnLog *MU.Logger
+	// OwnLog *MU.Logger
 	// SsnLog is session logger (shared by all input files)
-	SsnLog *MU.Logger
+	// SsnLog *MU.Logger
 }

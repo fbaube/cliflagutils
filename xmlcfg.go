@@ -14,11 +14,25 @@ import (
 
 	"github.com/fbaube/db"
 	FU "github.com/fbaube/fileutils"
-	MU "github.com/fbaube/miscutils"
+	L "github.com/fbaube/mlog"
+
+	// L "github.com/fbaube/mlog"
 	SU "github.com/fbaube/stringutils"
 	WU "github.com/fbaube/wasmutils"
 	XM "github.com/fbaube/xmlmodels"
 )
+
+// FIXME:
+// hide a flag by specifying its name
+// flags.MarkHidden("secretFlag")
+
+/* FIXME:
+// SetOutput sets the destination for usage and error messages.
+// If output is nil, os.Stderr is used.
+func (f *FlagSet) SetOutput(output io.Writer) {
+	f.output = output
+}
+*/
 
 var inArg, outArg, dbArg, gtokensArg, xmlCatArg, xmlSchemasArg string
 
@@ -41,13 +55,20 @@ type XmlAppConfiguration struct {
 
 var myAppName string
 
+func SetAppName(s string) {
+	myAppName = s
+}
+
 var multipleXmlCatalogFiles []*XM.XmlCatalogFile
 
 // CA maybe should not be exported. Or should be generated
 // on-the-fly instead of being a Singleton.
 // // var CA XmlAppConfiguration
 
-func myUsage() {
+// MyUsage displays (1) the app name (or "(wasm)"), plus (2) a usage
+// summary (see the func body), plus (3) the flags' usage message.
+// TODO: Should not return info for flags that are Hidden (i.e. disabled).
+func MyUsage() {
 	//  Println(CA.AppName, "[-d] [-g] [-h] [-m] [-p] [-v] [-z] [-D] [-o outfile] [-d dbdir] Infile")
 	fmt.Println(myAppName, "[-d] [-g] [-h] [-m] [-p] [-v] [-z] [-D] [-d dbdir] [-r port] Infile")
 	fmt.Println("   Process mixed content XML, XHTML/XDITA, and Markdown/MDITA input.")
@@ -68,7 +89,7 @@ var UMM = map[string]string{
 	// Simple BOOLs
 	"h": "Show extended help message and exit",
 	"g": "Group all generated files in same-named folder \n" +
-		"(e.g. ./Filnam.xml maps to ./Filenam.xml_gxml/Filenam.*)",
+		"(e.g. ./Filenam.xml maps to ./Filenam.xml_gxml/Filenam.*)",
 	"m": "Import input file(s) to database",
 	"p": "Pretty-print to file with \"fmtd-\" prepended to file extension",
 	"t": "gTree written to file with \"gtr-\" prepended to file extension",
@@ -105,62 +126,97 @@ func initVars(pXAC *XmlAppConfiguration) {
 	EnableAllFlags()
 }
 
+var calledCheckMustUsage bool
+
+// CheckMustUsage returns a non-nil loggable error message if the caller
+// should abort execution.
+func CheckMustUsage() error {
+	calledCheckMustUsage = true
+	if WU.IsWasm() {
+		myAppName = "(wasm)"
+		return nil
+	}
+	// Figure out what CLI name we were called as
+	myAppName, _ := os.Executable()
+	// The call to FP.Clean(..) is needed (!!)
+	L.L.Dbg("Executing: " + FU.Tildotted(FP.Clean(myAppName)))
+	myAppName = FP.Base(myAppName)
+	// Process CLI invocation flags
+	flag.Parse()
+	L.L.Dbg("Command tail: %+v", flag.Args())
+	// FIXME - pos'l arg OR "-i" OR stdin OR "-"
+	gotNoArgs := (len(os.Args) < 2)
+	gotBadArgs := (nil == flag.Args() || 0 == len(flag.Args()))
+	if !(gotNoArgs || gotBadArgs) {
+		return nil
+	}
+	var err error
+	if !gotNoArgs {
+		err = errors.New("ERROR: Argument parsing failed. Did not specify input file(s)?")
+		println(myAppName+":", err.Error())
+	}
+	MyUsage()
+	return err
+}
+
 // checkbarf simply aborts with an error message, if a
 // serious (i.e. top-level) problem has been encountered.
 func checkbarf(e error, s string) {
 	if e == nil {
 		return
 	}
-	MU.SessionLogger.Printf("%s failed: %s \n", myAppName, e)
-	fmt.Fprintf(os.Stderr, "%s failed: %s \n", myAppName, e)
-	MU.ErrorTrace(os.Stderr, e)
+	// MU.SessionLogger.Printf("%s failed: %s \n", myAppName, e)
+	// fmt.Fprintf(os.Stderr, "%s failed: %s \n", myAppName, e)
+	// MU.ErrorTrace(os.Stderr, e)
+	L.L.Panic("%s failed: %s", myAppName, e)
 	os.Exit(1)
 }
 
 // NewXmlAppConfiguration processes CLI arguments for any XML-related command.
-func NewXmlAppConfiguration(appName string, osArgs []string) (*XmlAppConfiguration, error) {
+// It takes the CLI arguments as calling parameters, rather than accessing them
+// directly itself, to facilitate testing, and enable running in-browser as wasm.
+func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
+	if !calledCheckMustUsage {
+		println("DEV: Please call CheckMustUsage()) before calling NewXmlAppConfiguration")
+		e := CheckMustUsage()
+		if e != nil {
+			return nil, e
+		}
+	}
 	var pXAC *XmlAppConfiguration
 	pXAC = new(XmlAppConfiguration)
 	initVars(pXAC)
 	DisableFlags("hDgpr")
-	// Do not use logging until the invocation is sorted out.
-	myAppName = appName
-	pXAC.AppName = appName
+	pXAC.AppName = myAppName
 	var e error
 
 	// If called from the CLI
 	if !WU.IsWasm() {
-		// Figure out what CLI name we were called as
-		osex, _ := os.Executable()
-		// The call to FP.Clean(..) is needed (!!)
-		println("==> Running:", FU.Tildotted(FP.Clean(osex)))
 		// Locate xmllint for doing XML validations
 		xl, e := exec.LookPath("xmllint")
 		if e != nil {
-			xl = "not found"
 			if pXAC.Validate {
-				println("==> Validation is not possible: xmllint cannot be found")
+				L.L.Info("Validation is not possible: xmllint cannot be found")
 			}
 		}
-		println("==> xmllint:", xl)
+		L.L.Info("xmllint found at: " + xl)
 	}
 	// Examine CLI invocation flags
 	flag.Parse()
-	fmt.Printf("D=> Command tail: %+v \n", flag.Args())
+	L.L.Dbg("Command tail: %+v \n", flag.Args())
 	// FIXME - pos'l arg OR "-i" OR stdin OR "-"
-	if len(osArgs) < 2 || nil == flag.Args() || 0 == len(flag.Args()) {
-		println("==> Argument parsing failed. Did not specify input file(s)?")
-		myUsage()
+	if len(osArgs) < 2 {
+		L.L.Panic("CLI argument processing")
 		os.Exit(1)
 	}
 	if pXAC.Debug {
-		fmt.Printf("D=> Flags: debug:%s grpGen:%s help:%s "+
-			"import:%s pritty:%s gtokens:%s gtree:%s validate:%s zeroOutDB:%s restPort:%d \n",
+		L.L.Dbg("CLI tail:", flag.Args())
+		L.L.Dbg("CLI flags: debug:%s grpGen:%s help:%s "+
+			"import:%s pritty:%s gtokens:%s gtree:%s validate:%s zeroOutDB:%s restPort:%d",
 			SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated), SU.Yn(pXAC.Help),
 			SU.Yn(pXAC.DBdoImport), SU.Yn(pXAC.Pritt), SU.Yn(pXAC.GTokens),
 			SU.Yn(pXAC.GTree), SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut),
 			pXAC.RestPort)
-		fmt.Println("D=> CLI tail:", flag.Args())
 	}
 
 	// ===========================================
