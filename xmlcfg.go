@@ -313,17 +313,16 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	if !theDBexists {
 		s = "does not exist"
 	}
-	fmt.Printf("==> DB %s: %s\n", s, pXAC.DBhandle.PathProps.AbsFP())
+	L.L.Info("DB %s: %s", s, FU.Tildotted(pXAC.DBhandle.PathProps.AbsFP()))
 
 	if pXAC.DBdoZeroOut {
-		println("    --> Zeroing out DB")
+		L.L.Progress("Zeroing out DB")
 		pXAC.DBhandle.MoveCurrentToBackup()
 		pXAC.DBhandle.ForceEmpty()
 	} else {
 		pXAC.DBhandle.DupeCurrentToBackup()
 		pXAC.DBhandle.ForceExistDBandTables()
 	}
-	// spew.Dump(pCA.DBhandle)
 	return nil
 }
 
