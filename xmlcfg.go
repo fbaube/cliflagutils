@@ -262,8 +262,8 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 		// Process input-file(s) argument, which can be a relative filepath.
 		pXAC.Infile = *FU.NewPathProps(flag.Args()[0])
 		// If the absolute path does not match the argument provided, inform the user.
-		if pXAC.Infile.AbsFP() != flag.Args()[0] { // CA.In.RelFilePath { // CA.In.ArgFilePath {
-			L.L.Info("Infilespec: " + FU.Tildotted(pXAC.Infile.AbsFP()))
+		if pXAC.Infile.AbsFP.S() != flag.Args()[0] { // CA.In.RelFilePath { // CA.In.ArgFilePath {
+			L.L.Info("Infilespec: " + FU.Tildotted(pXAC.Infile.AbsFP.S()))
 		}
 		if pXAC.Infile.IsOkayDir() {
 			L.L.Info("The input is a directory and will be processed recursively.")
@@ -272,7 +272,7 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 			pXAC.SingleFile = true
 		} else {
 			L.L.Error("The input is a type not understood.")
-			return nil, errors.New("Bad type for input: " + pXAC.Infile.AbsFP())
+			return nil, errors.New("Bad type for input: " + pXAC.Infile.AbsFP.S())
 		}
 	}
 
@@ -292,7 +292,8 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 
 	e = pXAC.ProcessDatabaseArgs()
 	checkbarf(e, "Could not process DB directory argument(s)")
-	e = pXAC.ProcessCatalogArgs()
+	// e = pXAC.ProcessCatalogArgs()
+	L.L.Warning("XML catalog processingn is temporariy disabled!")
 	checkbarf(e, "Could not process XML catalog argument(s)")
 	return pXAC, e
 }
@@ -313,7 +314,7 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	if !theDBexists {
 		s = "does not exist"
 	}
-	L.L.Info("DB %s: %s", s, FU.Tildotted(pXAC.DBhandle.PathProps.AbsFP()))
+	L.L.Info("DB %s: %s", s, FU.Tildotted(pXAC.DBhandle.PathProps.AbsFP.S()))
 
 	if pXAC.DBdoZeroOut {
 		L.L.Progress("Zeroing out DB")
@@ -326,6 +327,7 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	return nil
 }
 
+/*
 func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 	var gotC, gotS bool
 	gotC = ("" != xmlCatArg)
@@ -340,34 +342,34 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 		// pCA.XmlCat.ProcessFilePathArg(CA.XmlCat.ArgFilePath)
 		pXAC.Xmlcatfile = *FU.NewPathProps(xmlCatArg)
 		if !(pXAC.Xmlcatfile.IsOkayFile() && pXAC.Xmlcatfile.Size() > 0) {
-			println("==> ERROR: XML catalog filepath is not file: " + pXAC.Xmlcatfile.AbsFP())
+			println("==> ERROR: XML catalog filepath is not file: " + pXAC.Xmlcatfile.AbsFP)
 			return errors.New(fmt.Sprintf("mcfile.ConfArgs.ProcCatalArgs<%s:%s>",
-				xmlCatArg, pXAC.Xmlcatfile.AbsFP()))
+				xmlCatArg, pXAC.Xmlcatfile.AbsFP))
 		}
 		println("==> Catalog:", xmlCatArg)
-		if pXAC.Xmlcatfile.AbsFP() != xmlCatArg {
-			println("     --> i.e. ", FU.Enhomed(pXAC.Xmlcatfile.AbsFP()))
+		if pXAC.Xmlcatfile.AbsFP.S() != xmlCatArg {
+			println("     --> i.e. ", FU.Enhomed(pXAC.Xmlcatfile.AbsFP.S()))
 		}
 	}
 	if gotS { // -s
 		pXAC.Xmlschemasdir = *FU.NewPathProps(xmlSchemasArg)
 		if !pXAC.Xmlschemasdir.IsOkayDir() {
 			return errors.New("mcfile.ConfArgs.ProcCatalArgs: cannot open XML catalog directory: " +
-				pXAC.Xmlschemasdir.AbsFP())
+				pXAC.Xmlschemasdir.AbsFP.S())
 		}
 	}
 	var e error
 	if gotS { // -s and not -c
 		println("==> Schema(s):", xmlSchemasArg)
 		pXAC.Xmlschemasdir = *FU.NewPathProps(xmlSchemasArg)
-		if pXAC.Xmlschemasdir.AbsFP() != xmlSchemasArg {
-			println("     --> i.e. ", FU.Enhomed(pXAC.Xmlschemasdir.AbsFP()))
+		if pXAC.Xmlschemasdir.AbsFP.S() != xmlSchemasArg {
+			println("     --> i.e. ", FU.Enhomed(pXAC.Xmlschemasdir.AbsFP.S()))
 		}
 		if !pXAC.Xmlschemasdir.IsOkayDir() {
 			println("==> ERROR: Schema path is not a readable directory: " +
-				FU.Enhomed(pXAC.Xmlschemasdir.AbsFP()))
+				FU.Enhomed(pXAC.Xmlschemasdir.AbsFP.S()))
 			return fmt.Errorf("mcfile.ConfArgs.ProcCatalArgs.abs<%s>: %w",
-				pXAC.Xmlschemasdir.AbsFP(), e)
+				pXAC.Xmlschemasdir.AbsFP, e)
 		}
 	}
 	// println(" ")
@@ -401,7 +403,7 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 		}
 		filePathToUse := FU.AbsFilePath(".")
 		if xmlCatArg != "" {
-			filePathToUse = FU.AbsFilePath(pXAC.Xmlschemasdir.AbsFP())
+			filePathToUse = FU.AbsFilePath(pXAC.Xmlschemasdir.AbsFP)
 		}
 		fileNameList, e := filePathToUse.GatherNamedFiles(fileNameToUse)
 		if e != nil {
@@ -463,3 +465,4 @@ func (pXAC *XmlAppConfiguration) ProcessCatalogArgs() error {
 	// TODO:470 If import, create batch info ?
 	return nil
 }
+*/
