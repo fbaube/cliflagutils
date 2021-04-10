@@ -293,7 +293,7 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 	e = pXAC.ProcessDatabaseArgs()
 	checkbarf(e, "Could not process DB directory argument(s)")
 	// e = pXAC.ProcessCatalogArgs()
-	L.L.Warning("XML catalog processingn is temporariy disabled!")
+	L.L.Warning("XML catalog processing is temporariy disabled!")
 	checkbarf(e, "Could not process XML catalog argument(s)")
 	return pXAC, e
 }
@@ -305,9 +305,11 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	if !mustAccessTheDB {
 		return nil
 	}
+	// NewMmmcDB(..) does not open or touch any files;
+	// it only checks that the path is OK.
 	pXAC.DBhandle, e = db.NewMmmcDB(dbArg)
 	if e != nil {
-		return fmt.Errorf("DB setup failure: %w", e)
+		return fmt.Errorf("DB path failure: %w", e)
 	}
 	theDBexists = pXAC.DBhandle.PathProps.Exists()
 	var s = "exists"
@@ -318,10 +320,14 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 
 	if pXAC.DBdoZeroOut {
 		L.L.Progress("Zeroing out DB")
-		pXAC.DBhandle.MoveCurrentToBackup()
+		if theDBexists {
+			pXAC.DBhandle.MoveCurrentToBackup()
+		}
 		pXAC.DBhandle.ForceEmpty()
 	} else {
-		pXAC.DBhandle.DupeCurrentToBackup()
+		if theDBexists {
+			pXAC.DBhandle.DupeCurrentToBackup()
+		}
 		pXAC.DBhandle.ForceExistDBandTables()
 	}
 	return nil
