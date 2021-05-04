@@ -220,15 +220,13 @@ func NewXmlAppConfiguration(osArgs []string) (*XmlAppConfiguration, error) {
 		L.L.Close()
 		os.Exit(1)
 	}
-	if pXAC.Debug {
-		L.L.Dbg("CLI tail:", flag.Args())
-		L.L.Dbg("CLI flags: debug:%s grpGen:%s help:%s "+
-			"import:%s pritty:%s gtokens:%s gtree:%s validate:%s zeroOutDB:%s restPort:%d",
-			SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated), SU.Yn(pXAC.Help),
-			SU.Yn(pXAC.DBdoImport), SU.Yn(pXAC.Pritt), SU.Yn(pXAC.GTokens),
-			SU.Yn(pXAC.GTree), SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut),
-			pXAC.RestPort)
-	}
+	L.L.Dbg("CLI tail: %+v", flag.Args())
+	L.L.Dbg("CLI flags: debug:%s grpGen:%s help:%s "+
+		"import:%s pritty:%s gtokens:%s gtree:%s validate:%s zeroOutDB:%s restPort:%d",
+		SU.Yn(pXAC.Debug), SU.Yn(pXAC.GroupGenerated), SU.Yn(pXAC.Help),
+		SU.Yn(pXAC.DBdoImport), SU.Yn(pXAC.Pritt), SU.Yn(pXAC.GTokens),
+		SU.Yn(pXAC.GTree), SU.Yn(pXAC.Validate), SU.Yn(pXAC.DBdoZeroOut),
+		pXAC.RestPort)
 
 	// ===========================================
 	//   PROCESS INPUT SPEC
