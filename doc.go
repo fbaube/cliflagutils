@@ -2,4 +2,7 @@
 // capability for XML-oriented programs. It provides a large set of useful
 // arguments that can individually (or as a group) be enabled or else
 // disabled (i.e. hidden).
+//
+// The packages imports github.com/fbaube/(fileutils,stringutils,wasmutils)
+//
 package cliflagutils
