@@ -1,2 +1,2 @@
 # cliflagutils
-cliflagutils makes it easy to process CLI options for XML apps.
+cliflagutils makes it easier to process CLI options for complex XML apps.
