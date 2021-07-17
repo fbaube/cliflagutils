@@ -12,7 +12,7 @@ import (
 
 	"errors"
 
-	"github.com/fbaube/db"
+	DU "github.com/fbaube/dbutils"
 	FU "github.com/fbaube/fileutils"
 	L "github.com/fbaube/mlog"
 
@@ -39,7 +39,7 @@ var inArg, outArg, dbArg, gtokensArg, xmlCatArg, xmlSchemasArg string
 // XmlAppConfiguration can probably be used with various 3rd-party utilities.
 type XmlAppConfiguration struct {
 	AppName  string
-	DBhandle *db.MmmcDB
+	DBhandle *DU.MmmcDB
 	Infile, Outfile, Dbdir,
 	Xmlcatfile, Xmlschemasdir FU.PathProps // NOT ptr! Barfs at startup.
 	RestPort int
@@ -305,7 +305,7 @@ func (pXAC *XmlAppConfiguration) ProcessDatabaseArgs() error {
 	}
 	// NewMmmcDB(..) does not open or touch any files;
 	// it only checks that the path is OK.
-	pXAC.DBhandle, e = db.NewMmmcDB(dbArg)
+	pXAC.DBhandle, e = DU.NewMmmcDB(dbArg)
 	if e != nil {
 		return fmt.Errorf("DB path failure: %w", e)
 	}
