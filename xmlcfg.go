@@ -19,7 +19,7 @@ import (
 	// L "github.com/fbaube/mlog"
 	SU "github.com/fbaube/stringutils"
 	WU "github.com/fbaube/wasmutils"
-	XM "github.com/fbaube/xmlmodels"
+	XU "github.com/fbaube/xmlutils"
 )
 
 // FIXME:
@@ -49,7 +49,7 @@ type XmlAppConfiguration struct {
 	// Result of processing CLI arg for input file(s)
 	SingleFile bool
 	// Result of processing CLI args (-c, -s)
-	*XM.XmlCatalogFile
+	*XU.XmlCatalogFile
 	PrittOutput io.Writer
 }
 
@@ -61,7 +61,7 @@ func SetAppName(s string) {
 }
 */
 
-var multipleXmlCatalogFiles []*XM.XmlCatalogFile
+var multipleXmlCatalogFiles []*XU.XmlCatalogFile
 
 // CA maybe should not be exported. Or should be generated
 // on-the-fly instead of being a Singleton.
